@@ -3,7 +3,8 @@ import streamlit as st
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores import FAISS
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain.chat_models import ChatOpenAI
+from langchain.embeddings.openai import OpenAIEmbeddings
 
 # ---------------------------
 # STATIC CONFIG
@@ -74,3 +75,4 @@ if openai_api_key and query:
     # Final answer
     st.subheader("💡 Answer")
     st.write(response)
+
