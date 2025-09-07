@@ -9,7 +9,7 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 # ---------------------------
 # STATIC CONFIG
 # ---------------------------
-PDF_PATH = r"InvitedReviewPaper.pdf"  # Keep the PDF in repo root
+PDF_PATH = r"Invited Review Paper 1-s2.0-S2949891025000715-main (2).pdf"  # Keep the PDF in repo root
 
 # ---------------------------
 # STREAMLIT UI
@@ -75,4 +75,5 @@ if openai_api_key and query:
     # Final answer
     st.subheader("💡 Answer")
     st.write(response)
+
 
