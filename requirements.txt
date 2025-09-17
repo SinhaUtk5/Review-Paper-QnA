@@ -3,12 +3,13 @@ numpy>=1.26
 pypdf>=3.10.0
 faiss-cpu>=1.12
 openai>=1.0.0
-angchain==0.3.27 
-langchain-community==0.3.29
-rich==14.1.0
+langchain>=0.1.0
+langchain-community>=0.0.26
+
 pygments==2.19.2
 markdown-it-py==4.0.0
 mdurl==0.1.2
 Pillow>=10.0.0
+
 
 
