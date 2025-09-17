@@ -46,31 +46,24 @@ st.markdown(
 # --- Author section with pictures ---
 col1, col2 = st.columns(2)
 
-with col1:
-    st.image(
-        load_square_image("birol.jpg"), caption="Dr. Birol Dindoruk", width=180
-    )  # <-- replace with correct path/URL
-    st.markdown(
-        """
-        **Birol Dindoruk**  
-        Professor  
-        Harold Vance Department of Petroleum Engineering,  
-        Texas A&M University  
-        """
-    )
 
-with col2:
-    st.image(
-        load_square_image("utkarsh.jpg"), caption="Utkarsh Sinha", width=180
-    )  # <-- replace with correct path/URL
-    st.markdown(
-        """
-        **Utkarsh Sinha**  
-        Remote Collaborator  
-        Harold Vance Department of Petroleum Engineering,
-        Texas A&M University  
-        """
+
+with col1:
+        st.image(
+        load_square_image("birol.jpg"), caption="Dr. Birol Dindoruk", width=220
     )
+    st.markdown("**Dr. Birol Dindoruk** ")
+    st.markdown("Professor")
+    st.markdown("Harold Vance Department of Petroleum Engineering,")
+    st.markdown("Texas A&M University")
+with col2:
+    st.image(load_square_image("utkarsh.jpg"), caption="Utkarsh Sinha", width=220)  # replace with correct path/URL
+    st.markdown("**Utkarsh Sinha**")
+    st.markdown("Remote Collaborator")
+    st.markdown("Harold Vance Department of Petroleum Engineering,")
+    st.markdown("Texas A&M University")
+
+
 # API key input
 openai_api_key = st.text_input("🔑 Enter your OpenAI API Key:", type="password")
 if openai_api_key:
@@ -144,3 +137,4 @@ Context Sources:
     for i, (doc, score) in enumerate(docs_with_scores):
         with st.expander(f"Chunk {i+1} (score={score:.4f})"):
             st.write(doc.page_content)
+
