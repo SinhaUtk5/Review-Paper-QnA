@@ -49,19 +49,23 @@ col1, col2 = st.columns(2)
 
 
 with col1:
-    st.image(
-        load_square_image("birol.jpg"), caption="Dr. Birol Dindoruk", width=220
+    st.image(load_square_image("birol.jpg"), caption="Dr. Birol Dindoruk", width=220)
+    st.markdown(
+        "**Dr. Birol Dindoruk**<br>"
+        "Professor<br>"
+        "Harold Vance Department of Petroleum Engineering,<br>"
+        "Texas A&M University",
+        unsafe_allow_html=True
     )
-    st.markdown("**Dr. Birol Dindoruk** ")
-    st.markdown("Professor")
-    st.markdown("Harold Vance Department of Petroleum Engineering,")
-    st.markdown("Texas A&M University")
 with col2:
-    st.image(load_square_image("utkarsh.jpg"), caption="Utkarsh Sinha", width=220)  # replace with correct path/URL
-    st.markdown("**Utkarsh Sinha**")
-    st.markdown("Remote Collaborator")
-    st.markdown("Harold Vance Department of Petroleum Engineering,")
-    st.markdown("Texas A&M University")
+    st.image(load_square_image("utkarsh.jpg"), caption="Utkarsh Sinha", width=180)  # replace with correct path/URL
+    st.markdown(
+        "**Utkarsh Sinha**<br>"
+        "Remote Collaborator<br>"
+        "Harold Vance Department of Petroleum Engineering,<br>"
+        "Texas A&M University",
+        unsafe_allow_html=True
+    )
 
 
 # API key input
@@ -137,5 +141,6 @@ Context Sources:
     for i, (doc, score) in enumerate(docs_with_scores):
         with st.expander(f"Chunk {i+1} (score={score:.4f})"):
             st.write(doc.page_content)
+
 
 
