@@ -9,7 +9,7 @@ from PIL import Image
 
 
 # Function to load and resize images to square
-def load_square_image(path, size=220):
+def load_square_image(path, size=200):
     try:
         img = Image.open(path)
         # Crop to square if needed
@@ -58,7 +58,7 @@ with col1:
         unsafe_allow_html=True
     )
 with col2:
-    st.image(load_square_image("utkarsh.jpg"), caption="Utkarsh Sinha", width=180)  # replace with correct path/URL
+    st.image(load_square_image("utkarsh.jpg"), caption="Utkarsh Sinha", width=220)  # replace with correct path/URL
     st.markdown(
         "**Utkarsh Sinha**<br>"
         "Remote Collaborator<br>"
@@ -141,6 +141,7 @@ Context Sources:
     for i, (doc, score) in enumerate(docs_with_scores):
         with st.expander(f"Chunk {i+1} (score={score:.4f})"):
             st.write(doc.page_content)
+
 
 
 
