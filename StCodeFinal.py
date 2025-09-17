@@ -4,9 +4,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores import FAISS
 from PIL import Image
-# Instead of from langchain_openai
-from langchain.chat_models import ChatOpenAI
-from langchain.embeddings import OpenAIEmbedding
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+
 
 # Function to load and resize images to square
 def load_square_image(path, size=220):
@@ -144,4 +143,5 @@ Context Sources:
     for i, (doc, score) in enumerate(docs_with_scores):
         with st.expander(f"Chunk {i+1} (score={score:.4f})"):
             st.write(doc.page_content)
+
 
