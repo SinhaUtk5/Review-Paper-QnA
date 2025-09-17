@@ -49,7 +49,7 @@ col1, col2 = st.columns(2)
 
 
 with col1:
-    st.image(load_square_image("birol.jpg"), caption="Dr. Birol Dindoruk", width=220)
+    st.image(load_square_image("birol.jpg"), caption="Dr. Birol Dindoruk", width=250)
     st.markdown(
         "**Dr. Birol Dindoruk**<br>"
         "Professor<br>"
@@ -58,7 +58,7 @@ with col1:
         unsafe_allow_html=True
     )
 with col2:
-    st.image(load_square_image("utkarsh.jpg"), caption="Utkarsh Sinha", width=220)  # replace with correct path/URL
+    st.image(load_square_image("utkarsh.jpg"), caption="Utkarsh Sinha", width=250)  # replace with correct path/URL
     st.markdown(
         "**Utkarsh Sinha**<br>"
         "Remote Collaborator<br>"
@@ -141,6 +141,7 @@ Context Sources:
     for i, (doc, score) in enumerate(docs_with_scores):
         with st.expander(f"Chunk {i+1} (score={score:.4f})"):
             st.write(doc.page_content)
+
 
 
 
