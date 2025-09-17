@@ -49,7 +49,7 @@ col1, col2 = st.columns(2)
 
 
 with col1:
-        st.image(
+    st.image(
         load_square_image("birol.jpg"), caption="Dr. Birol Dindoruk", width=220
     )
     st.markdown("**Dr. Birol Dindoruk** ")
@@ -137,4 +137,5 @@ Context Sources:
     for i, (doc, score) in enumerate(docs_with_scores):
         with st.expander(f"Chunk {i+1} (score={score:.4f})"):
             st.write(doc.page_content)
+
 
