@@ -3,8 +3,9 @@ import streamlit as st
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores import FAISS
+from langchain.chat_models import ChatOpenAI
+from langchain.embeddings import OpenAIEmbeddings
 from PIL import Image
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 
 # Function to load and resize images to square
@@ -27,7 +28,7 @@ def load_square_image(path, size=220):
 # ---------------------------
 # CONFIG
 # ---------------------------
-PDF_PATH = r"C:\Users\Utkarsh Sinha\Desktop\Videos and Notes\QnA ChatBot\Invited Review Paper 1-s2.0-S2949891025000715-main (2).pdf"
+PDF_PATH = r"InvitedReviewPaper.pdf"
 
 st.title("📄 QnA on Invited Review Paper")
 
@@ -143,5 +144,3 @@ Context Sources:
     for i, (doc, score) in enumerate(docs_with_scores):
         with st.expander(f"Chunk {i+1} (score={score:.4f})"):
             st.write(doc.page_content)
-
-
