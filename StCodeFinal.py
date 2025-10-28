@@ -1,33 +1,17 @@
 import os
 import streamlit as st
 
-# --- LangChain split resilient imports ---
-
-# Text splitter (new → mid → legacy)
+# Text splitter
 try:
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 except ImportError:
-    try:
-        from langchain.text_splitters import RecursiveCharacterTextSplitter  # mid-era
-    except ImportError:
-        from langchain.text_splitter import RecursiveCharacterTextSplitter   # legacy
+    from langchain.text_splitters import RecursiveCharacterTextSplitter  # mid-era
 
-# Chat model (new → legacy)
-try:
-    from langchain_openai import ChatOpenAI
-except ImportError:
-    from langchain.chat_models import ChatOpenAI
+# OpenAI Chat + Embeddings (split packages)
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
-# Embeddings (new → legacy)
-try:
-    from langchain_openai import OpenAIEmbeddings
-except ImportError:
-    from langchain.embeddings import OpenAIEmbeddings
-
-# Community integrations remain here
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores import FAISS
-
 from PIL import Image
 
 
@@ -164,6 +148,7 @@ Context Sources:
     for i, (doc, score) in enumerate(docs_with_scores):
         with st.expander(f"Chunk {i+1} (score={score:.4f})"):
             st.write(doc.page_content)
+
 
 
 
