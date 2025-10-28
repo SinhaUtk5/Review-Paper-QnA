@@ -78,12 +78,13 @@ from PIL import Image, ImageOps
 
 
 # --- App Config --------------------------------------------------------------------
-# --- App Config --------------------------------------------------------------------
 st.set_page_config(page_title="PIML Invited Review — Q&A", page_icon="📄", layout="wide")
 
 # --- Workaround: some hosts inject proxy envs that break older openai clients ---
+# This is kept but the core fix is in build_embeddings/build_llm.
 for _k in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"):
     os.environ.pop(_k, None)
+    
 # Constants (update paths/titles as needed)
 PDF_PATH_DEFAULT = "InvitedReviewPaper.pdf"
 PAPER_TITLE = "Review of physics-informed machine learning (PIML) methods in subsurface engineering"
@@ -134,11 +135,16 @@ def call_llm(llm, prompt: str) -> str:
 
 
 def build_embeddings(api_key: Optional[str]):
-    """Instantiate embeddings with widest compatibility."""
+    """Instantiate embeddings with widest compatibility, explicitly overriding proxies."""
     kwargs = {}
     # Some versions accept openai_api_key kwarg; most read from env.
     if api_key:
         kwargs["openai_api_key"] = api_key
+    
+    # FIX: Explicitly set proxies to None in client_kwargs to avoid TypeError 
+    # on newer openai versions (v1.x) which is likely the cause of the traceback.
+    kwargs["client_kwargs"] = {"proxies": None}
+
     # Prefer modern default model where supported; fall back silently.
     for model in ["text-embedding-3-small", "text-embedding-3-large", "text-embedding-ada-002"]:
         try:
@@ -150,10 +156,13 @@ def build_embeddings(api_key: Optional[str]):
 
 
 def build_llm(api_key: Optional[str], model_choice: Optional[str] = None, temperature: float = 0.0):
-    """Instantiate ChatOpenAI across versions."""
+    """Instantiate ChatOpenAI across versions, explicitly overriding proxies."""
     kwargs = {"temperature": temperature}
     if api_key:
         kwargs["openai_api_key"] = api_key
+
+    # FIX: Explicitly set proxies to None in client_kwargs to avoid TypeError.
+    kwargs["client_kwargs"] = {"proxies": None}
 
     # Prefer gpt-4o-mini; fall back through some stable models.
     candidates = [model_choice] if model_choice else ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-3.5-turbo"]
@@ -259,7 +268,7 @@ with c1:
     if img1:
         st.image(img1, caption="Dr. Birol Dindoruk", width=150)
     st.markdown(
-        "**Dr. Birol Dindoruk**  \n"
+        "**Dr. Birol Dindoruk** \n"
         "Professor  \n"
         "Harold Vance Department of Petroleum Engineering,  \n"
         "Texas A&M University"
@@ -271,13 +280,12 @@ with c2:
     if img2:
         st.image(img2, caption="Utkarsh Sinha", width=150)
     st.markdown(
-        "**Utkarsh Sinha**  \n"
+        "**Utkarsh Sinha** \n"
         "Remote Collaborator  \n"
         "Harold Vance Department of Petroleum Engineering,  \n"
         "Texas A&M University"
     )
 
-# Controls
 # Controls
 st.divider()
 
@@ -326,6 +334,11 @@ if go:
     if not openai_api_key:
         safe_warning("Please enter your OpenAI API key.")
         st.stop()
+    
+    # Check if a query was entered
+    if not query:
+        safe_warning("Please enter a question to run the Q&A.")
+        st.stop()
 
     try:
         # Load vectorstore (cached)
@@ -344,40 +357,40 @@ if go:
                 docs = vectorstore.similarity_search(query, k=k_results)
                 docs_scores = [(d, 0.0) for d in docs]
 
-        # Sort by ascending distance/score if scores are present and numeric
-        try:
-            docs_scores = sorted(docs_scores, key=lambda x: float(x[1]))
-        except Exception:
-            pass
+            # Sort by ascending distance/score if scores are present and numeric
+            try:
+                docs_scores = sorted(docs_scores, key=lambda x: float(x[1]))
+            except Exception:
+                pass
 
-        if not docs_scores:
-            safe_warning("No chunks retrieved. Try broadening your question or adjusting chunk size/overlap.")
-            st.stop()
+            if not docs_scores:
+                safe_warning("No chunks retrieved. Try broadening your question or adjusting chunk size/overlap.")
+                st.stop()
 
-        grounded_context = format_sources(docs_scores)
+            grounded_context = format_sources(docs_scores)
 
-        # LLM
-        with st.spinner("Generating answer…"):
-            llm = build_llm(openai_api_key, model_choice=model_choice, temperature=temperature)
-            system_prompt = build_system_prompt()
-            user_prompt = build_user_prompt(query, grounded_context)
-            prompt = f"{system_prompt}\n\n{user_prompt}"
-            answer = call_llm(llm, prompt)
+            # LLM
+            with st.spinner("Generating answer…"):
+                llm = build_llm(openai_api_key, model_choice=model_choice, temperature=temperature)
+                system_prompt = build_system_prompt()
+                user_prompt = build_user_prompt(query, grounded_context)
+                prompt = f"{system_prompt}\n\n{user_prompt}"
+                answer = call_llm(llm, prompt)
 
-        # Display
-        st.subheader("💡 Answer")
-        st.markdown(answer)
+            # Display
+            st.subheader("💡 Answer")
+            st.markdown(answer)
 
-        st.subheader("🔎 Retrieved Chunks")
-        for i, (doc, score) in enumerate(docs_scores, start=1):
-            page = doc.metadata.get("page", "?")
-            with st.expander(f"Chunk {i} — p.{page} (score={score:.4f})"):
-                st.write(doc.page_content)
-                if doc.metadata:
-                    st.caption(f"Metadata: {doc.metadata}")
+            st.subheader("🔎 Retrieved Chunks")
+            for i, (doc, score) in enumerate(docs_scores, start=1):
+                page = doc.metadata.get("page", "?")
+                with st.expander(f"Chunk {i} — p.{page} (score={score:.4f})"):
+                    st.write(doc.page_content)
+                    if doc.metadata:
+                        st.caption(f"Metadata: {doc.metadata}")
 
-        st.divider()
-        st.caption(f"Citation format reminder: {PAPER_CITATION}")
+            st.divider()
+            st.caption(f"Citation format reminder: {PAPER_CITATION}")
 
     except FileNotFoundError as e:
         safe_warning(str(e))
@@ -385,5 +398,3 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
-
-
