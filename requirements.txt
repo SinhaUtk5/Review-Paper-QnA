@@ -1,10 +1,23 @@
-streamlit>=1.36.0
+streamlit==1.50.0
 Pillow>=10.0.0
-langchain==0.1.20       # Necessary for internal dependencies
-langchain-core>=0.2.14
-langchain-community>=0.2.10
-langchain-openai>=0.1.13
-langchain-text-splitters>=0.2.2
-openai>=1.35.1
-pypdf>=4.2.0
-docarray>=0.30.0
+
+# --- LangChain 1.x unified set ---
+langchain==1.0.2
+langchain-core>=1.0.1,<1.1
+langchain-community>=1.0.1,<1.1
+langchain-openai>=1.0.1,<1.1
+langchain-text-splitters>=1.0.0,<1.1
+# ---------------------------------
+
+# OpenAI SDK (new API surface)
+openai>=2.6.0
+
+# PDF + vectorstore deps
+pypdf>=6.1.3
+docarray>=0.41.0
+
+# Common runtime deps for langchain 1.x
+PyYAML>=6.0
+SQLAlchemy>=2.0,<3
+aiohttp>=3.9
+dataclasses-json>=0.6,<0.7
