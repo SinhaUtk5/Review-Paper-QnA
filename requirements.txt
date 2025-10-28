@@ -1,16 +1,11 @@
-# Safe baseline — no native builds required
 streamlit==1.39.0
 pillow==10.4.0
 
 langchain==0.3.7
 langchain-core==0.3.15
 langchain-community==0.3.5
-langchain-openai==0.2.3
+langchain-openai==0.2.7
+openai==1.58.1
 
 pypdf==5.1.0
-
-# Vector fallback (pure Python)
 docarray==0.40.0
-
-# OpenAI client used by langchain-openai
-openai==1.52.2
