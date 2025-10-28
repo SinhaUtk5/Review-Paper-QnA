@@ -81,7 +81,6 @@ from PIL import Image, ImageOps
 st.set_page_config(page_title="PIML Invited Review — Q&A", page_icon="📄", layout="wide")
 
 # --- Workaround: some hosts inject proxy envs that break older openai clients ---
-# This is kept but the core fix is in build_embeddings/build_llm.
 for _k in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"):
     os.environ.pop(_k, None)
     
@@ -133,25 +132,32 @@ def call_llm(llm, prompt: str) -> str:
         except Exception as e:
             raise e
 
-
+# --- START OF FIX ---
 def build_embeddings(api_key: Optional[str]):
     """Instantiate embeddings with widest compatibility, explicitly overriding proxies."""
     kwargs = {}
-    # Some versions accept openai_api_key kwarg; most read from env.
     if api_key:
         kwargs["openai_api_key"] = api_key
     
-    # FIX: Explicitly set proxies to None in client_kwargs to avoid TypeError 
-    # on newer openai versions (v1.x) which is likely the cause of the traceback.
-    kwargs["client_kwargs"] = {"proxies": None}
+    # FIX: Define client_kwargs separately to prevent it from being included in the 
+    # internal arguments passed by the vector store during embedding generation.
+    client_kwargs = {"proxies": None}
 
     # Prefer modern default model where supported; fall back silently.
     for model in ["text-embedding-3-small", "text-embedding-3-large", "text-embedding-ada-002"]:
         try:
-            return OpenAIEmbeddings(model=model, **kwargs)
+            # Pass client_kwargs explicitly as a keyword argument to the constructor
+            return OpenAIEmbeddings(model=model, client_kwargs=client_kwargs, **kwargs)
+        except TypeError:
+            # Fallback for older versions of LangChain that don't take client_kwargs
+            try:
+                return OpenAIEmbeddings(model=model, **kwargs)
+            except Exception:
+                continue
         except Exception:
             continue
-    # Last resort: try without passing model
+            
+    # Last resort: try default constructor
     return OpenAIEmbeddings(**kwargs)
 
 
@@ -161,18 +167,27 @@ def build_llm(api_key: Optional[str], model_choice: Optional[str] = None, temper
     if api_key:
         kwargs["openai_api_key"] = api_key
 
-    # FIX: Explicitly set proxies to None in client_kwargs to avoid TypeError.
-    kwargs["client_kwargs"] = {"proxies": None}
+    # FIX: Define client_kwargs separately
+    client_kwargs = {"proxies": None}
 
     # Prefer gpt-4o-mini; fall back through some stable models.
     candidates = [model_choice] if model_choice else ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-3.5-turbo"]
     for m in candidates:
         try:
-            return ChatOpenAI(model=m, **kwargs)
+            # Pass client_kwargs explicitly as a keyword argument to the constructor
+            return ChatOpenAI(model=m, client_kwargs=client_kwargs, **kwargs)
+        except TypeError:
+            # Fallback for older versions of LangChain that don't take client_kwargs
+            try:
+                return ChatOpenAI(model=m, **kwargs)
+            except Exception:
+                continue
         except Exception:
             continue
+            
     # Last resort: try default constructor
     return ChatOpenAI(**kwargs)
+# --- END OF FIX ---
 
 
 def load_pdf_documents(pdf_path: str) -> List[Document]:
@@ -213,9 +228,11 @@ def build_vectorstore(chunks: List[Document], embeddings, prefer_faiss: bool = T
 
     if _DA_AVAILABLE:
         try:
+            # This call should now work cleanly as the embeddings object was initialized properly
             return DocArrayInMemorySearch.from_texts(texts=texts, embedding=embeddings, metadatas=metadatas), "DocArrayInMemorySearch"
         except Exception as e:
-            raise RuntimeError("Failed to build DocArrayInMemorySearch vectorstore.") from e
+            # Added a better error message for clarity if the error persists
+            raise RuntimeError(f"Failed to build DocArrayInMemorySearch vectorstore. Check docarray installation: {e}") from e
 
     raise RuntimeError("No usable vectorstore backend found. Install faiss-cpu or ensure DocArrayInMemorySearch is available.")
 
