@@ -1,14 +1,19 @@
-streamlit>=1.36,<2
-langchain>=0.2.11,<0.3
-langchain-community>=0.2.11,<0.3
-langchain-openai>=0.1.7,<0.2
-langchain-text-splitters>=0.2.2,<0.3
-faiss-cpu>=1.7.4,<2
-pypdf>=4.2.0,<5
-Pillow>=10.2.0,<11
-tiktoken>=0.7.0,<0.8
-openai>=1.40.0,<2
-rich==14.1.0
-pygments==2.19.2
-markdown-it-py==4.0.0
-mdurl==0.1
+# Core app
+streamlit==1.39.0
+pillow==10.4.0
+
+# LangChain split packages (current ecosystem, Oct 2025)
+langchain==0.3.7
+langchain-core==0.3.15
+langchain-community==0.3.5
+langchain-openai==0.2.3
+
+# PDF loader dependency
+pypdf==5.1.0
+
+# Vector backends
+faiss-cpu==1.8.0.post1   # optional but preferred
+docarray==0.40.0         # for DocArrayInMemorySearch fallback
+
+# (Optional) if you see SSL / urllib issues on some systems:
+requests==2.32.3
