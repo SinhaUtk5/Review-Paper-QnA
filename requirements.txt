@@ -7,3 +7,6 @@ streamlit==1.39.0
 pillow==10.4.0
 pypdf==5.1.0
 docarray==0.40.0
+
+rich==13.7.1
+markdown-it-py==3.0.0
