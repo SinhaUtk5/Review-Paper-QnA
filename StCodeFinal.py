@@ -113,29 +113,32 @@ def call_llm(llm, prompt: str) -> str:
 # --- START OF FINAL FIX for Embeddings ---
 def build_embeddings(api_key: Optional[str]):
     """
-    Instantiate embeddings without passing a custom OpenAI client.
-    Let langchain_openai handle SDK details (avoids .create mismatch).
+    Use an adapter so langchain_openai (which calls client.create)
+    works with OpenAI v2 SDK (which uses client.embeddings.create).
     """
-    # Try preferred models in order
-    candidates = ["text-embedding-3-small", "text-embedding-3-large", "text-embedding-ada-002"]
-    for model in candidates:
-        # Prefer api_key kw; fallback to legacy openai_api_key if needed
+    # Build v2 SDK client
+    client = openai.OpenAI(api_key=api_key)  # no proxies kw in v2
+
+    # Minimal adapter: provide the .create(...) API that LC expects
+    class _EmbeddingsClientAdapter:
+        def __init__(self, inner):
+            self._inner = inner
+        def create(self, **kwargs):
+            # forwards to v2 endpoint
+            return self._inner.embeddings.create(**kwargs)
+
+    adapter = _EmbeddingsClientAdapter(client)
+
+    # Try preferred models
+    for model in ["text-embedding-3-small", "text-embedding-3-large", "text-embedding-ada-002"]:
         try:
-            return OpenAIEmbeddings(model=model, api_key=api_key)
-        except TypeError:
-            # Some releases use 'openai_api_key'
-            try:
-                return OpenAIEmbeddings(model=model, openai_api_key=api_key)
-            except Exception:
-                continue
+            return OpenAIEmbeddings(model=model, client=adapter)
         except Exception:
             continue
 
-    # Last resort (let it pick default)
-    try:
-        return OpenAIEmbeddings(api_key=api_key)
-    except TypeError:
-        return OpenAIEmbeddings(openai_api_key=api_key)
+    # Last resort: let it pick default model
+    return OpenAIEmbeddings(client=adapter)
+
 # --- END OF FINAL FIX for Embeddings ---
 
 
@@ -387,6 +390,7 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
 
 
