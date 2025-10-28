@@ -14,13 +14,12 @@ try:
     from langchain_text_splitters import RecursiveCharacterTextSplitter
     from langchain_openai import ChatOpenAI as _ChatOpenAI, OpenAIEmbeddings as _OpenAIEmbeddings
     from langchain_community.document_loaders import PyPDFLoader
-    from langchain_community.vectorstores import FAISS
-    from langchain_community.vectorstores import DocArrayInMemorySearch
-    from langchain.schema import Document
+    # NOTE: We skip the direct import of langchain.schema, relying on later fallbacks.
     
     ChatOpenAI = _ChatOpenAI
     OpenAIEmbeddings = _OpenAIEmbeddings
 except ImportError as e:
+    # If this block fails, it means core packages like openai, langchain_openai, etc. are missing.
     st.error(f"A critical package is missing. Please ensure all dependencies from requirements.txt are installed. Error: {e}")
     st.stop()
 
@@ -394,3 +393,4 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
