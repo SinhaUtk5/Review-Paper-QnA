@@ -6,3 +6,4 @@ langchain-openai>=0.1.13
 langchain-text-splitters>=0.2.2
 openai>=1.35.1
 pypdf>=4.2.0
+docarray>=0.30.0  # <--- ADD THIS LINE
