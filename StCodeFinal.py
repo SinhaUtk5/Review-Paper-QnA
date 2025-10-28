@@ -144,30 +144,25 @@ def build_embeddings(api_key: Optional[str]):
 
 
 def build_llm(api_key: Optional[str], model_choice: Optional[str] = None, temperature: float = 0.0):
-    """Instantiate ChatOpenAI across versions, explicitly overriding proxies."""
-    kwargs = {"temperature": temperature}
+    """Instantiate ChatOpenAI across versions, explicitly bypassing proxies via client."""
+    # Create an explicit OpenAI client (same pattern you used for embeddings)
+    client_params = {}
     if api_key:
-        kwargs["openai_api_key"] = api_key
+        client_params["api_key"] = api_key
+    client = openai.OpenAI(proxies=None, **client_params)
 
-    # Retain the explicit client_kwargs passing for ChatOpenAI as it's generally cleaner 
-    # and less prone to the same downstream errors as Embeddings.
-    client_kwargs = {"proxies": None}
+    kwargs = {"temperature": temperature}
 
-    # Prefer gpt-4o-mini; fall back through some stable models.
     candidates = [model_choice] if model_choice else ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-3.5-turbo"]
     for m in candidates:
         try:
-            return ChatOpenAI(model=m, client_kwargs=client_kwargs, **kwargs)
-        except TypeError:
-            try:
-                return ChatOpenAI(model=m, **kwargs)
-            except Exception:
-                continue
+            # Pass the prepared client directly; avoid client_kwargs (can raise on some versions)
+            return ChatOpenAI(model=m, client=client, **kwargs)
         except Exception:
             continue
-            
-    # Last resort: try default constructor
-    return ChatOpenAI(**kwargs)
+
+    # Last resort
+    return ChatOpenAI(client=client, **kwargs)
 
 
 def load_pdf_documents(pdf_path: str) -> List[Document]:
@@ -393,4 +388,5 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
