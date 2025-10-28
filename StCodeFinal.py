@@ -256,11 +256,15 @@ with c1:
     if img1:
         st.image(img1, caption="Dr. Birol Dindoruk", width=150)
     st.markdown(
-        "**Dr. Birol Dindoruk** \n"
-        "Professor  \n"
-        "Harold Vance Department of Petroleum Engineering,  \n"
-        "Texas A&M University"
+        """
+        **Dr. Birol Dindoruk**<br>
+        Professor<br>
+        Harold Vance Department of Petroleum Engineering,<br>
+        Texas A&M University
+        """,
+        unsafe_allow_html=True,
     )
+
 with c2:
     img2 = load_square_image("utkarsh.jpg") or load_square_image(
         "https://upload.wikimedia.org/wikipedia/commons/8/88/Placeholder_avatar.png"
@@ -268,11 +272,15 @@ with c2:
     if img2:
         st.image(img2, caption="Utkarsh Sinha", width=150)
     st.markdown(
-        "**Utkarsh Sinha** \n"
-        "Remote Collaborator  \n"
-        "Harold Vance Department of Petroleum Engineering,  \n"
-        "Texas A&M University"
+        """
+        **Utkarsh Sinha**<br>
+        Remote Collaborator<br>
+        Harold Vance Department of Petroleum Engineering,<br>
+        Texas A&M University
+        """,
+        unsafe_allow_html=True,
     )
+
 
 st.divider()
 
@@ -384,4 +392,5 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
