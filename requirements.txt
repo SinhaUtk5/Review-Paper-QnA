@@ -1,22 +1,13 @@
-# UI
 streamlit>=1.36,<2
-
-# Core LangChain split (keep them aligned)
 langchain>=0.2.11,<0.3
 langchain-community>=0.2.11,<0.3
 langchain-openai>=0.1.7,<0.2
 langchain-text-splitters>=0.2.2,<0.3
-
-# Vector store + parsing
 faiss-cpu>=1.7.4,<2
 pypdf>=4.2.0,<5
 Pillow>=10.2.0,<11
 tiktoken>=0.7.0,<0.8
-
-# OpenAI SDK (if you ever use it directly)
 openai>=1.40.0,<2
-
-# Optional (these pins are fine)
 rich==14.1.0
 pygments==2.19.2
 markdown-it-py==4.0.0
