@@ -9,19 +9,15 @@ import streamlit as st
 
 # --- Ensure we can import the underlying openai client manually ---
 try:
-    import openai
-    # Attempt to import the new/split LangChain packages
-    from langchain_text_splitters import RecursiveCharacterTextSplitter
-    from langchain_openai import ChatOpenAI as _ChatOpenAI, OpenAIEmbeddings as _OpenAIEmbeddings
-    from langchain_community.document_loaders import PyPDFLoader
-    # NOTE: We skip the direct import of langchain.schema, relying on later fallbacks.
-    
-    ChatOpenAI = _ChatOpenAI
-    OpenAIEmbeddings = _OpenAIEmbeddings
-except ImportError as e:
-    # If this block fails, it means core packages like openai, langchain_openai, etc. are missing.
-    st.error(f"A critical package is missing. Please ensure all dependencies from requirements.txt are installed. Error: {e}")
-    st.stop()
+    from langchain_core.documents import Document  # 1.x location
+except Exception:
+    try:
+        from langchain.schema import Document      # legacy location
+    except Exception:
+        class Document:  # type: ignore
+            def __init__(self, page_content: str, metadata: Optional[dict] = None):
+                self.page_content = page_content
+                self.metadata = metadata or {}
 
 
 # --- Fallback Checks (Original code logic retained for compatibility) ---
@@ -388,5 +384,6 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
 
