@@ -1,52 +1,31 @@
 import os
+import io
 import sys
 import traceback
 import urllib.request
 from typing import List, Tuple, Optional
-import io
 
 import streamlit as st
 
-# --- Safe, version-agnostic imports -------------------------------------------------
-# Text splitter: prefer new package; fall back to older paths.
+# --- Ensure we can import the underlying openai client manually ---
 try:
-    from langchain_text_splitters import RecursiveCharacterTextSplitter  # >=0.0.1
-except Exception:
-    try:
-        from langchain.text_splitters import RecursiveCharacterTextSplitter  # legacy
-    except Exception as e:
-        st.error("Could not import RecursiveCharacterTextSplitter. Please install langchain-text-splitters or a compatible LangChain.")
-        st.stop()
-
-# LLM + Embeddings (new, split packages first; fallback to legacy).
-ChatOpenAI = None
-OpenAIEmbeddings = None
-_openai_embeddings_kwargs = {}
-
-try:
+    import openai
+    # Attempt to import the new/split LangChain packages
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
     from langchain_openai import ChatOpenAI as _ChatOpenAI, OpenAIEmbeddings as _OpenAIEmbeddings
+    from langchain_community.document_loaders import PyPDFLoader
+    from langchain_community.vectorstores import FAISS
+    from langchain_community.vectorstores import DocArrayInMemorySearch
+    from langchain.schema import Document
+    
     ChatOpenAI = _ChatOpenAI
     OpenAIEmbeddings = _OpenAIEmbeddings
-    _openai_embeddings_kwargs = {}
-except Exception:
-    try:
-        # Legacy imports
-        from langchain.chat_models import ChatOpenAI as _ChatOpenAI
-        from langchain.embeddings import OpenAIEmbeddings as _OpenAIEmbeddings
-        ChatOpenAI = _ChatOpenAI
-        OpenAIEmbeddings = _OpenAIEmbeddings
-        _openai_embeddings_kwargs = {}
-    except Exception:
-        st.error("Could not import OpenAI LLM/Embeddings. Install langchain-openai or a compatible LangChain version.")
-        st.stop()
+except ImportError as e:
+    st.error(f"A critical package is missing. Please ensure all dependencies from requirements.txt are installed. Error: {e}")
+    st.stop()
 
-# Document loader (PDF)
-try:
-    from langchain_community.document_loaders import PyPDFLoader
-except Exception:
-    PyPDFLoader = None
 
-# Vector stores: prefer FAISS; fallback to DocArrayInMemorySearch to avoid faiss-cpu dep.
+# --- Fallback Checks (Original code logic retained for compatibility) ---
 _FAISS_AVAILABLE = True
 try:
     from langchain_community.vectorstores import FAISS
@@ -80,7 +59,7 @@ from PIL import Image, ImageOps
 # --- App Config --------------------------------------------------------------------
 st.set_page_config(page_title="PIML Invited Review — Q&A", page_icon="📄", layout="wide")
 
-# --- Workaround: some hosts inject proxy envs that break older openai clients ---
+# --- Workaround: Clear proxy environment variables ---
 for _k in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"):
     os.environ.pop(_k, None)
     
@@ -122,9 +101,7 @@ def show_exception(e: Exception):
 
 def call_llm(llm, prompt: str) -> str:
     """Compatible invocation across LangChain versions."""
-    # Newer LC uses .invoke; older exposes .predict
     try:
-        # Some ChatOpenAI implementations treat input as dict
         return llm.invoke(prompt) if hasattr(llm, "invoke") else llm.predict(prompt)  # type: ignore
     except TypeError:
         try:
@@ -132,33 +109,39 @@ def call_llm(llm, prompt: str) -> str:
         except Exception as e:
             raise e
 
-# --- START OF FIX ---
+# --- START OF FINAL FIX for Embeddings ---
 def build_embeddings(api_key: Optional[str]):
-    """Instantiate embeddings with widest compatibility, explicitly overriding proxies."""
+    """
+    Instantiate embeddings by manually creating the underlying openai client 
+    to handle proxy/config overrides, preventing 'client_kwargs' TypeError.
+    """
     kwargs = {}
-    if api_key:
-        kwargs["openai_api_key"] = api_key
     
-    # FIX: Define client_kwargs separately to prevent it from being included in the 
-    # internal arguments passed by the vector store during embedding generation.
-    client_kwargs = {"proxies": None}
-
+    # 1. Manually configure and create the underlying openai.OpenAI client
+    client_params = {}
+    if api_key:
+        client_params["api_key"] = api_key
+        
+    # Crucial Fix: Instantiate the client with proxies=None to bypass environment injection
+    # that causes LangChain to pass the problematic 'client_kwargs' downstream.
+    client = openai.OpenAI(
+        proxies=None,
+        **client_params
+    )
+    
+    # 2. Pass the configured client and model to LangChain
+    
     # Prefer modern default model where supported; fall back silently.
     for model in ["text-embedding-3-small", "text-embedding-3-large", "text-embedding-ada-002"]:
         try:
-            # Pass client_kwargs explicitly as a keyword argument to the constructor
-            return OpenAIEmbeddings(model=model, client_kwargs=client_kwargs, **kwargs)
-        except TypeError:
-            # Fallback for older versions of LangChain that don't take client_kwargs
-            try:
-                return OpenAIEmbeddings(model=model, **kwargs)
-            except Exception:
-                continue
+            # Pass the configured client object directly
+            return OpenAIEmbeddings(model=model, client=client, **kwargs)
         except Exception:
             continue
             
-    # Last resort: try default constructor
-    return OpenAIEmbeddings(**kwargs)
+    # Last resort: try without passing model
+    return OpenAIEmbeddings(client=client, **kwargs)
+# --- END OF FINAL FIX for Embeddings ---
 
 
 def build_llm(api_key: Optional[str], model_choice: Optional[str] = None, temperature: float = 0.0):
@@ -167,17 +150,16 @@ def build_llm(api_key: Optional[str], model_choice: Optional[str] = None, temper
     if api_key:
         kwargs["openai_api_key"] = api_key
 
-    # FIX: Define client_kwargs separately
+    # Retain the explicit client_kwargs passing for ChatOpenAI as it's generally cleaner 
+    # and less prone to the same downstream errors as Embeddings.
     client_kwargs = {"proxies": None}
 
     # Prefer gpt-4o-mini; fall back through some stable models.
     candidates = [model_choice] if model_choice else ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-3.5-turbo"]
     for m in candidates:
         try:
-            # Pass client_kwargs explicitly as a keyword argument to the constructor
             return ChatOpenAI(model=m, client_kwargs=client_kwargs, **kwargs)
         except TypeError:
-            # Fallback for older versions of LangChain that don't take client_kwargs
             try:
                 return ChatOpenAI(model=m, **kwargs)
             except Exception:
@@ -187,7 +169,6 @@ def build_llm(api_key: Optional[str], model_choice: Optional[str] = None, temper
             
     # Last resort: try default constructor
     return ChatOpenAI(**kwargs)
-# --- END OF FIX ---
 
 
 def load_pdf_documents(pdf_path: str) -> List[Document]:
@@ -228,10 +209,8 @@ def build_vectorstore(chunks: List[Document], embeddings, prefer_faiss: bool = T
 
     if _DA_AVAILABLE:
         try:
-            # This call should now work cleanly as the embeddings object was initialized properly
             return DocArrayInMemorySearch.from_texts(texts=texts, embedding=embeddings, metadatas=metadatas), "DocArrayInMemorySearch"
         except Exception as e:
-            # Added a better error message for clarity if the error persists
             raise RuntimeError(f"Failed to build DocArrayInMemorySearch vectorstore. Check docarray installation: {e}") from e
 
     raise RuntimeError("No usable vectorstore backend found. Install faiss-cpu or ensure DocArrayInMemorySearch is available.")
@@ -415,4 +394,3 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
-
