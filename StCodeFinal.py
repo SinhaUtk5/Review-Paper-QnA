@@ -274,8 +274,12 @@ with c2:
     )
 
 # Controls
+# Controls
 st.divider()
-pdf_path = st.text_input("📄 PDF path", value=PDF_PATH_DEFAULT, help="Local path to the invited review PDF.")
+
+# Fixed PDF path (hidden from UI)
+pdf_path = PDF_PATH_DEFAULT
+
 openai_api_key = st.text_input("🔑 OpenAI API Key", type="password", help="Key is used only in your session.")
 model_choice = st.selectbox("🤖 Model", ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-3.5-turbo"], index=0)
 query = st.text_input("❓ Ask a question related to the paper:")
@@ -377,3 +381,4 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
