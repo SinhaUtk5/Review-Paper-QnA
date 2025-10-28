@@ -6,7 +6,6 @@ langchain-core==0.3.16
 langchain-community==0.3.5
 
 # Streamlit aligned to rich 14.x
-streamlit==1.41.1
 rich==14.2.0
 markdown-it-py==4.0.0
 
@@ -14,3 +13,7 @@ markdown-it-py==4.0.0
 pillow==10.4.0
 pypdf==5.1.0
 docarray==0.40.0
+
+streamlit==1.42.0
+
+
