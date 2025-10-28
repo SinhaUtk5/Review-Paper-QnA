@@ -1,12 +1,16 @@
+# LangChain / OpenAI (fixes proxies+core pin)
 langchain-openai==0.2.7
 openai==1.58.1
 langchain==0.3.7
-langchain-core==0.3.15
+langchain-core==0.3.16
 langchain-community==0.3.5
-streamlit==1.39.0
+
+# Streamlit aligned to rich 14.x
+streamlit==1.41.1
+rich==14.2.0
+markdown-it-py==4.0.0
+
+# Other deps
 pillow==10.4.0
 pypdf==5.1.0
 docarray==0.40.0
-
-rich==13.7.1
-markdown-it-py==3.0.0
