@@ -86,11 +86,34 @@ def show_exception(e: Exception):
 
 
 def call_llm(llm, prompt: str) -> str:
-    """Compatible invocation across LangChain versions."""
+    """Return just the text content, regardless of LC version/object shape."""
     try:
-        return llm.invoke(prompt) if hasattr(llm, "invoke") else llm.predict(prompt)  # type: ignore
+        out = llm.invoke(prompt) if hasattr(llm, "invoke") else llm.predict(prompt)  # type: ignore
     except TypeError:
-        return llm.invoke({"input": prompt})  # type: ignore
+        out = llm.invoke({"input": prompt})  # type: ignore
+
+    # If it's already a string
+    if isinstance(out, str):
+        return out
+
+    # LangChain AIMessage / BaseMessage
+    content = getattr(out, "content", None)
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):  # sometimes structured content
+        parts = []
+        for part in content:
+            if isinstance(part, dict) and part.get("type") == "text":
+                parts.append(part.get("text", ""))
+        if parts:
+            return "\n".join(parts)
+
+    # Dict-shaped fallback
+    if isinstance(out, dict) and "content" in out:
+        return str(out["content"])
+
+    # Last resort: stringify
+    return str(out)
 
 
 # --- Embeddings: adapter to bridge LC -> OpenAI v2 ---------------------------------
@@ -361,3 +384,4 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
