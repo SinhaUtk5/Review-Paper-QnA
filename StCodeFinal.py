@@ -126,7 +126,6 @@ def build_embeddings(api_key: Optional[str]):
     # Crucial Fix: Instantiate the client with proxies=None to bypass environment injection
     # that causes LangChain to pass the problematic 'client_kwargs' downstream.
     client = openai.OpenAI(
-        proxies=None,
         **client_params
     )
     
@@ -151,7 +150,7 @@ def build_llm(api_key: Optional[str], model_choice: Optional[str] = None, temper
     client_params = {}
     if api_key:
         client_params["api_key"] = api_key
-    client = openai.OpenAI(proxies=None, **client_params)
+    client = openai.OpenAI( **client_params)
 
     kwargs = {"temperature": temperature}
 
@@ -390,6 +389,7 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
 
 
