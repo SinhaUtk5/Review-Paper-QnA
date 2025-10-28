@@ -7,7 +7,12 @@ from typing import List, Tuple, Optional
 
 import streamlit as st
 
-# --- Ensure we can import the underlying openai client manually ---
+# Core SDK + LangChain 1.x split packages
+import openai
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import PyPDFLoader
+# --- Document schema (prefer 1.x) ---
 try:
     from langchain_core.documents import Document  # 1.x location
 except Exception:
@@ -384,6 +389,7 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
 
 
