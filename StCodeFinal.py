@@ -4,6 +4,7 @@ import sys
 import traceback
 import urllib.request
 from typing import List, Tuple, Optional
+from PIL import Image, ImageOps
 
 import streamlit as st
 
@@ -389,6 +390,7 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
 
 
