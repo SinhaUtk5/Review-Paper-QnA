@@ -1,7 +1,7 @@
 streamlit>=1.36.0
 Pillow>=10.0.0
-langchain>=0.2.14  # <--- ADD THIS LINE
-langchain-core>=0.2.14
+langchain>=0.2.14            # Needed for legacy stability
+langchain-core>=0.2.14       # Where 'schema' items now live (Document, etc.)
 langchain-community>=0.2.10
 langchain-openai>=0.1.13
 langchain-text-splitters>=0.2.2
