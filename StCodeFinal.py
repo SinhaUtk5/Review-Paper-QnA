@@ -113,57 +113,55 @@ def call_llm(llm, prompt: str) -> str:
 # --- START OF FINAL FIX for Embeddings ---
 def build_embeddings(api_key: Optional[str]):
     """
-    Instantiate embeddings by manually creating the underlying openai client 
-    to handle proxy/config overrides, preventing 'client_kwargs' TypeError.
+    Instantiate embeddings without passing a custom OpenAI client.
+    Let langchain_openai handle SDK details (avoids .create mismatch).
     """
-    kwargs = {}
-    
-    # 1. Manually configure and create the underlying openai.OpenAI client
-    client_params = {}
-    if api_key:
-        client_params["api_key"] = api_key
-        
-    # Crucial Fix: Instantiate the client with proxies=None to bypass environment injection
-    # that causes LangChain to pass the problematic 'client_kwargs' downstream.
-    client = openai.OpenAI(
-        **client_params
-    )
-    
-    # 2. Pass the configured client and model to LangChain
-    
-    # Prefer modern default model where supported; fall back silently.
-    for model in ["text-embedding-3-small", "text-embedding-3-large", "text-embedding-ada-002"]:
+    # Try preferred models in order
+    candidates = ["text-embedding-3-small", "text-embedding-3-large", "text-embedding-ada-002"]
+    for model in candidates:
+        # Prefer api_key kw; fallback to legacy openai_api_key if needed
         try:
-            # Pass the configured client object directly
-            return OpenAIEmbeddings(model=model, client=client, **kwargs)
+            return OpenAIEmbeddings(model=model, api_key=api_key)
+        except TypeError:
+            # Some releases use 'openai_api_key'
+            try:
+                return OpenAIEmbeddings(model=model, openai_api_key=api_key)
+            except Exception:
+                continue
         except Exception:
             continue
-            
-    # Last resort: try without passing model
-    return OpenAIEmbeddings(client=client, **kwargs)
+
+    # Last resort (let it pick default)
+    try:
+        return OpenAIEmbeddings(api_key=api_key)
+    except TypeError:
+        return OpenAIEmbeddings(openai_api_key=api_key)
 # --- END OF FINAL FIX for Embeddings ---
 
 
 def build_llm(api_key: Optional[str], model_choice: Optional[str] = None, temperature: float = 0.0):
-    """Instantiate ChatOpenAI across versions, explicitly bypassing proxies via client."""
-    # Create an explicit OpenAI client (same pattern you used for embeddings)
-    client_params = {}
-    if api_key:
-        client_params["api_key"] = api_key
-    client = openai.OpenAI( **client_params)
-
+    """Instantiate ChatOpenAI without passing a custom OpenAI client."""
     kwargs = {"temperature": temperature}
-
     candidates = [model_choice] if model_choice else ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-3.5-turbo"]
+
+    # Prefer api_key kw; fall back to openai_api_key
     for m in candidates:
         try:
-            # Pass the prepared client directly; avoid client_kwargs (can raise on some versions)
-            return ChatOpenAI(model=m, client=client, **kwargs)
+            return ChatOpenAI(model=m, api_key=api_key, **kwargs)
+        except TypeError:
+            try:
+                return ChatOpenAI(model=m, openai_api_key=api_key, **kwargs)
+            except Exception:
+                continue
         except Exception:
             continue
 
-    # Last resort
-    return ChatOpenAI(client=client, **kwargs)
+    # Last resort: default constructor
+    try:
+        return ChatOpenAI(api_key=api_key, **kwargs)
+    except TypeError:
+        return ChatOpenAI(openai_api_key=api_key, **kwargs)
+
 
 
 def load_pdf_documents(pdf_path: str) -> List[Document]:
@@ -389,6 +387,7 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
 
 
