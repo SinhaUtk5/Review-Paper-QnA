@@ -327,7 +327,7 @@ with st.expander("⚙️ Advanced settings"):
     st.caption("Tune how the app splits text and retrieves context for your question.")
 
     chunk_size = st.slider(
-        "Chunk size (Text split length – larger means fewer, longer sections)",
+        "Chunk size (Text split length in words– larger means fewer, longer sections)",
         300, 1500, 800, step=50
     )
 
@@ -337,12 +337,12 @@ with st.expander("⚙️ Advanced settings"):
     )
 
     k_results = st.slider(
-        "Top-k retrieved chunks (How many text pieces to search)",
+        "Top-k retrieved chunks (How many relevant pieces to send to the LLM)",
         3, 20, 10, step=1
     )
 
     temperature = st.slider(
-        "LLM temperature (Answer creativity / randomness)",
+        "LLM temperature (Increase for creativity / randomness?)",
         0.0, 1.0, 0.0, step=0.1
     )
 
@@ -409,6 +409,7 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
 
 
