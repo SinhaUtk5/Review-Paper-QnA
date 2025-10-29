@@ -324,10 +324,10 @@ def _cached_vectorstore(pdf_path_: str, api_key: Optional[str], chunk_size: int,
 
 # Advanced settings
 with st.expander("⚙️ Advanced settings"):
-    chunk_size = st.slider("Chunk size", 300, 1500, 800, step=50)
+    chunk_size = st.slider("Chunk size (Chunk size in words)", 300, 1500, 800, step=50)
     chunk_overlap = st.slider("Chunk overlap", 0, 600, 200, step=25)
-    k_results = st.slider("Top-k retrieved chunks", 3, 20, 10, step=1)
-    temperature = st.slider("LLM Temperature", 0.0, 1.0, 0.0, step=0.1)
+    k_results = st.slider("Top-k retrieved chunks (Maximum most relevant chunks)", 3, 20, 10, step=1)
+    temperature = st.slider("LLM Temperature (Balance between predictability and creativity in generated text.)", 0.0, 1.0, 0.0, step=0.1)
 
 go = st.button("▶️ Run Q&A", type="primary")
 
@@ -392,5 +392,6 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
 
