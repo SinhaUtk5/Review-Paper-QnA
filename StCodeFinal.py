@@ -58,7 +58,7 @@ PAPER_URL = "https://www.sciencedirect.com/science/article/abs/pii/S294989102500
 
 # --- Utilities ---------------------------------------------------------------------
 def load_square_image(path_or_url: str, size: int = 200) -> Optional[Image.Image]:
-    """Open local path or URL, crop slightly top-weighted square, and resize."""
+    """Open local path or URL, crop more from the bottom (keep top of head), then resize."""
     try:
         # Load image from URL or local path
         if path_or_url.startswith(("http://", "https://")):
@@ -68,11 +68,12 @@ def load_square_image(path_or_url: str, size: int = 200) -> Optional[Image.Image
         else:
             img = Image.open(path_or_url).convert("RGB")
 
-        # Make it square but keep more of the top (so the head stays)
         w, h = img.size
         min_side = min(w, h)
+
+        # Adjust cropping: keep ~70% of top region, only crop bottom part
         left = (w - min_side) // 2
-        top = int((h - min_side) * 0.25)  # shift crop window upward (keep more top)
+        top = int((h - min_side) * 0.1)  # only crop 10% from top (keep almost entire head)
         top = max(0, top)
         bottom = top + min_side
         if bottom > h:
@@ -424,6 +425,7 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
 
 
