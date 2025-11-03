@@ -413,8 +413,8 @@ if go:
                 page = doc.metadata.get("page", "?")
                 with st.expander(f"Chunk {i} — p.{page} (score={score:.4f})"):
                     st.write(doc.page_content)
-                    if doc.metadata:
-                        st.caption(f"Metadata: {doc.metadata}")
+                    # if doc.metadata:
+                    #     st.caption(f"Metadata: {doc.metadata}")
 
             st.divider()
             st.caption(f"Citation format reminder: {PAPER_CITATION}")
@@ -425,6 +425,7 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
 
 
