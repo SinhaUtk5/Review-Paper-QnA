@@ -388,7 +388,7 @@ if go:
                 docs_scores = [(d, 0.0) for d in docs]
 
             try:
-                docs_scores = sorted(docs_scores, key=lambda x: float(x[1]))
+                docs_scores = sorted(docs_scores, key=lambda x: float(x[1]), reverse=True)
             except Exception:
                 pass
 
@@ -425,6 +425,7 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
 
 
