@@ -290,9 +290,8 @@ with c2:
     st.markdown(
         """
         **Utkarsh Sinha**<br>
-        Remote Collaborator<br>
-        Harold Vance Department of Petroleum Engineering,<br>
-        Texas A&M University
+        Volunteer Research Associate <br>
+        Interaction of Phase-Behavior and Flow (IPB&F) Consortium<br>
         """,
         unsafe_allow_html=True,
     )
@@ -425,6 +424,7 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
 
 
