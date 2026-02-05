@@ -43,7 +43,7 @@ except Exception:
 
 
 # --- App Config --------------------------------------------------------------------
-st.set_page_config(page_title="PIML Invited Review — Q&A", page_icon="📄", layout="wide")
+st.set_page_config(page_title="Q&A Chatbot on Physics-Informed Machine Learning (Sinha and Dindoruk, 2025)A", page_icon="📄", layout="wide")
 
 # --- Workaround: Clear proxy environment variables ---
 for _k in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"):
@@ -424,6 +424,7 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
 
 
