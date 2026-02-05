@@ -252,7 +252,7 @@ def build_user_prompt(query: str, grounded_context: str) -> str:
 
 
 # --- Streamlit UI ------------------------------------------------------------------
-st.title("📄 Q&A Chatbot on Physics-Informed Machine Learning (Sinha and Dindoruk, 2025)")
+st.title("📄 Q&A Chatbot on Physics-Informed Machine Learning")
 
 st.markdown(
     f"""
@@ -424,6 +424,7 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
 
 
