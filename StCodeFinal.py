@@ -19,12 +19,14 @@ try:
     from langchain_core.documents import Document  # 1.x location
 except Exception:
     try:
-        from langchain.schema import Document      # legacy location
+        from langchain.schema import Document  # legacy location
     except Exception:
+
         class Document:  # type: ignore
             def __init__(self, page_content: str, metadata: Optional[dict] = None):
                 self.page_content = page_content
                 self.metadata = metadata or {}
+
 
 # --- Vectorstore backends (FAISS preferred, DocArray fallback) ---
 _FAISS_AVAILABLE = True
@@ -43,16 +45,29 @@ except Exception:
 
 
 # --- App Config --------------------------------------------------------------------
-st.set_page_config(page_title="Q&A Chatbot on Physics-Informed Machine Learning (Sinha and Dindoruk, 2025)", page_icon="📄", layout="wide")
+st.set_page_config(
+    page_title="Q&A Chatbot on Physics-Informed Machine Learning (Sinha and Dindoruk, 2025)",
+    page_icon="📄",
+    layout="wide",
+)
 
 # --- Workaround: Clear proxy environment variables ---
-for _k in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"):
+for _k in (
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "ALL_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "all_proxy",
+):
     os.environ.pop(_k, None)
 
 # Constants
 PDF_PATH_DEFAULT = "InvitedReviewPaper.pdf"
 PAPER_TITLE = "Review of physics-informed machine learning (PIML) methods in subsurface engineering"
-PAPER_CITATION = "Sinha and Dindoruk (2025), Geoenergy Science and Engineering 250, 213713"
+PAPER_CITATION = (
+    "Sinha and Dindoruk (2025), Geoenergy Science and Engineering 250, 213713"
+)
 PAPER_URL = "https://www.sciencedirect.com/science/article/abs/pii/S2949891025000715"
 
 
@@ -73,7 +88,9 @@ def load_square_image(path_or_url: str, size: int = 200) -> Optional[Image.Image
 
         # Adjust cropping: keep ~70% of top region, only crop bottom part
         left = (w - min_side) // 2
-        top = int((h - min_side) * 0.1)  # only crop 10% from top (keep almost entire head)
+        top = int(
+            (h - min_side) * 0.1
+        )  # only crop 10% from top (keep almost entire head)
         top = max(0, top)
         bottom = top + min_side
         if bottom > h:
@@ -98,7 +115,10 @@ def safe_info(msg: str):
 
 def show_exception(e: Exception):
     with st.expander("Show error details"):
-        st.code("".join(traceback.format_exception(type(e), e, e.__traceback__)), language="python")
+        st.code(
+            "".join(traceback.format_exception(type(e), e, e.__traceback__)),
+            language="python",
+        )
 
 
 def call_llm(llm, prompt: str) -> str:
@@ -150,7 +170,11 @@ def build_embeddings(api_key: Optional[str]):
 
     adapter = _EmbeddingsClientAdapter(client)
 
-    for model in ["text-embedding-3-small", "text-embedding-3-large", "text-embedding-ada-002"]:
+    for model in [
+        "text-embedding-3-small",
+        "text-embedding-3-large",
+        "text-embedding-ada-002",
+    ]:
         try:
             return OpenAIEmbeddings(model=model, client=adapter)
         except Exception:
@@ -159,10 +183,23 @@ def build_embeddings(api_key: Optional[str]):
     return OpenAIEmbeddings(client=adapter)
 
 
-def build_llm(api_key: Optional[str], model_choice: Optional[str] = None, temperature: float = 0.0):
+def build_llm(
+    api_key: Optional[str], model_choice: Optional[str] = None, temperature: float = 0.0
+):
     """Instantiate ChatOpenAI without passing a custom OpenAI client."""
     kwargs = {"temperature": temperature}
-    candidates = [model_choice] if model_choice else ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-3.5-turbo"]
+    candidates = (
+        [model_choice]
+        if model_choice
+        else [
+            "gpt-5-mini",
+            "gpt-5",
+            "gpt-4o-mini",
+            "gpt-4o",
+            "gpt-4.1-mini",
+            "gpt-3.5-turbo",
+        ]
+    )
 
     for m in candidates:
         try:
@@ -184,7 +221,9 @@ def build_llm(api_key: Optional[str], model_choice: Optional[str] = None, temper
 def load_pdf_documents(pdf_path: str) -> List[Document]:
     """Load PDF into LangChain Documents, attaching page numbers."""
     if not PyPDFLoader:
-        raise RuntimeError("PyPDFLoader not available. Install langchain-community and pypdf.")
+        raise RuntimeError(
+            "PyPDFLoader not available. Install langchain-community and pypdf."
+        )
     if not os.path.exists(pdf_path):
         raise FileNotFoundError(f"PDF not found at: {pdf_path}")
     loader = PyPDFLoader(pdf_path)
@@ -196,8 +235,12 @@ def load_pdf_documents(pdf_path: str) -> List[Document]:
     return docs
 
 
-def chunk_documents(docs: List[Document], chunk_size: int = 800, chunk_overlap: int = 200) -> List[Document]:
-    splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+def chunk_documents(
+    docs: List[Document], chunk_size: int = 800, chunk_overlap: int = 200
+) -> List[Document]:
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size, chunk_overlap=chunk_overlap
+    )
     return splitter.split_documents(docs)
 
 
@@ -212,17 +255,33 @@ def build_vectorstore(chunks: List[Document], embeddings, prefer_faiss: bool = T
 
     if prefer_faiss and _FAISS_AVAILABLE:
         try:
-            return FAISS.from_texts(texts=texts, embedding=embeddings, metadatas=metadatas), "FAISS"
+            return (
+                FAISS.from_texts(
+                    texts=texts, embedding=embeddings, metadatas=metadatas
+                ),
+                "FAISS",
+            )
         except Exception:
-            safe_warning("FAISS not available or failed to build. Falling back to DocArrayInMemorySearch.")
+            safe_warning(
+                "FAISS not available or failed to build. Falling back to DocArrayInMemorySearch."
+            )
 
     if _DA_AVAILABLE:
         try:
-            return DocArrayInMemorySearch.from_texts(texts=texts, embedding=embeddings, metadatas=metadatas), "DocArrayInMemorySearch"
+            return (
+                DocArrayInMemorySearch.from_texts(
+                    texts=texts, embedding=embeddings, metadatas=metadatas
+                ),
+                "DocArrayInMemorySearch",
+            )
         except Exception as e:
-            raise RuntimeError(f"Failed to build DocArrayInMemorySearch vectorstore. Check docarray installation: {e}") from e
+            raise RuntimeError(
+                f"Failed to build DocArrayInMemorySearch vectorstore. Check docarray installation: {e}"
+            ) from e
 
-    raise RuntimeError("No usable vectorstore backend found. Install faiss-cpu or ensure DocArrayInMemorySearch is available.")
+    raise RuntimeError(
+        "No usable vectorstore backend found. Install faiss-cpu or ensure DocArrayInMemorySearch is available."
+    )
 
 
 def format_sources(docs_with_scores: List[Tuple[Document, float]]) -> str:
@@ -302,8 +361,21 @@ st.divider()
 # Fixed PDF path (hidden from UI)
 pdf_path = PDF_PATH_DEFAULT
 
-openai_api_key = st.text_input("🔑 OpenAI API Key", type="password", help="Key is used only in your session.")
-model_choice = st.selectbox("🤖 Model", ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-3.5-turbo"], index=0)
+openai_api_key = st.text_input(
+    "🔑 OpenAI API Key", type="password", help="Key is used only in your session."
+)
+model_choice = model_choice = st.selectbox(
+    "🤖 Model",
+    [
+        "gpt-5-mini",  # ⭐ recommended default
+        "gpt-5",
+        "gpt-4o-mini",
+        "gpt-4o",
+        "gpt-4.1-mini",
+        "gpt-3.5-turbo",
+    ],
+    index=0,
+)
 query = st.text_input("❓ Ask a question related to the paper:")
 
 # Set env for libs that read from it; many versions still expect env var
@@ -318,24 +390,35 @@ if st.button("🔄 Reset engine cache"):
 # Cache heavy stuff (include a compat tag so we can invalidate cleanly)
 _COMPAT_TAG = "v2_emb_adapter_v1"
 
+
 @st.cache_resource(show_spinner=True)
 def _cached_embeddings(api_key: Optional[str], compat_tag: str):
     return build_embeddings(api_key)
 
+
 @st.cache_resource(show_spinner=True)
 def _cached_docs(pdf_path_: str):
     return load_pdf_documents(pdf_path_)
+
 
 @st.cache_resource(show_spinner=True)
 def _cached_chunks(pdf_path_: str, chunk_size: int, chunk_overlap: int):
     docs_ = _cached_docs(pdf_path_)
     return chunk_documents(docs_, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
 
+
 @st.cache_resource(show_spinner=True)
-def _cached_vectorstore(pdf_path_: str, api_key: Optional[str], chunk_size: int, chunk_overlap: int, compat_tag: str):
+def _cached_vectorstore(
+    pdf_path_: str,
+    api_key: Optional[str],
+    chunk_size: int,
+    chunk_overlap: int,
+    compat_tag: str,
+):
     embs = _cached_embeddings(api_key, compat_tag)
     chunks_ = _cached_chunks(pdf_path_, chunk_size, chunk_overlap)
     return build_vectorstore(chunks_, embs, prefer_faiss=True)
+
 
 # Advanced settings
 with st.expander("⚙️ Advanced settings"):
@@ -343,22 +426,34 @@ with st.expander("⚙️ Advanced settings"):
 
     chunk_size = st.slider(
         "Chunk size (Text split length in words– larger means fewer, longer sections)",
-        300, 1500, 800, step=50
+        300,
+        1500,
+        800,
+        step=50,
     )
 
     chunk_overlap = st.slider(
         "Chunk overlap (Overlap between chunks – helps context flow)",
-        0, 600, 200, step=25
+        0,
+        600,
+        200,
+        step=25,
     )
 
     k_results = st.slider(
         "Top-k retrieved chunks (How many relevant pieces to send to the LLM)",
-        3, 20, 10, step=1
+        3,
+        20,
+        10,
+        step=1,
     )
 
     temperature = st.slider(
         "LLM temperature (Increase for creativity / randomness?)",
-        0.0, 1.0, 0.0, step=0.1
+        0.0,
+        1.0,
+        0.0,
+        step=0.1,
     )
 
 go = st.button("▶️ Run Q&A", type="primary")
@@ -375,30 +470,42 @@ if go:
 
     try:
         with st.spinner("Building / loading vector store…"):
-            vectorstore, backend = _cached_vectorstore(pdf_path, openai_api_key, chunk_size, chunk_overlap, _COMPAT_TAG)
+            vectorstore, backend = _cached_vectorstore(
+                pdf_path, openai_api_key, chunk_size, chunk_overlap, _COMPAT_TAG
+            )
 
-        st.caption(f"Vector backend: **{backend}** | chunks: {_cached_chunks(pdf_path, chunk_size, chunk_overlap).__len__()}")
+        st.caption(
+            f"Vector backend: **{backend}** | chunks: {_cached_chunks(pdf_path, chunk_size, chunk_overlap).__len__()}"
+        )
 
         with st.spinner("Retrieving relevant chunks…"):
             try:
-                docs_scores: List[Tuple[Document, float]] = vectorstore.similarity_search_with_score(query, k=k_results)
+                docs_scores: List[Tuple[Document, float]] = (
+                    vectorstore.similarity_search_with_score(query, k=k_results)
+                )
             except AttributeError:
                 docs = vectorstore.similarity_search(query, k=k_results)
                 docs_scores = [(d, 0.0) for d in docs]
 
             try:
-                docs_scores = sorted(docs_scores, key=lambda x: float(x[1]), reverse=True)
+                docs_scores = sorted(
+                    docs_scores, key=lambda x: float(x[1]), reverse=True
+                )
             except Exception:
                 pass
 
             if not docs_scores:
-                safe_warning("No chunks retrieved. Try broadening your question or adjusting chunk size/overlap.")
+                safe_warning(
+                    "No chunks retrieved. Try broadening your question or adjusting chunk size/overlap."
+                )
                 st.stop()
 
             grounded_context = format_sources(docs_scores)
 
             with st.spinner("Generating answer…"):
-                llm = build_llm(openai_api_key, model_choice=model_choice, temperature=temperature)
+                llm = build_llm(
+                    openai_api_key, model_choice=model_choice, temperature=temperature
+                )
                 system_prompt = build_system_prompt()
                 user_prompt = build_user_prompt(query, grounded_context)
                 prompt = f"{system_prompt}\n\n{user_prompt}"
@@ -424,17 +531,3 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
