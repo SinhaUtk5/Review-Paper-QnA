@@ -458,6 +458,17 @@ with st.expander("⚙️ Advanced settings"):
 
 go = st.button("▶️ Run Q&A", type="primary")
 
+
+def cleanup_answer(answer: str) -> str:
+    # Remove common parenthetical end-citations repeated throughout
+    answer = re.sub(r"\s*\(" + re.escape(PAPER_CITATION) + r"\)\s*", " ", answer)
+    # Remove the specific filler sentence pattern you mentioned (in case it appears)
+    answer = re.sub(r"\(title not provided in the supplied excerpts\)\.?\s*", "", answer, flags=re.I)
+    # Normalize whitespace
+    answer = re.sub(r"[ \t]+", " ", answer)
+    answer = re.sub(r"\n{3,}", "\n\n", answer).strip()
+    return answer
+
 # --- Main Flow --------------------------------------------------------------------
 if go:
     if not openai_api_key:
@@ -510,6 +521,7 @@ if go:
                 user_prompt = build_user_prompt(query, grounded_context)
                 prompt = f"{system_prompt}\n\n{user_prompt}"
                 answer = call_llm(llm, prompt)
+                answer = cleanup_answer(answer)
 
             st.subheader("💡 Answer")
             st.markdown(answer)
@@ -531,3 +543,4 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
