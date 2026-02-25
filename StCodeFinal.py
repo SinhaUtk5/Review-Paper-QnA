@@ -302,8 +302,17 @@ def build_system_prompt() -> str:
         "You are a helpful research assistant.\n"
         "Use ONLY the provided sources to answer the question.\n"
         'If unsure, reply exactly: "Not enough information in the provided sources."\n'
-        f'Always cite like "{PAPER_CITATION}" and mention the paper title when possible.\n'
-        "Only include statements grounded in the sources and avoid speculation.\n"
+        "\n"
+        "Formatting rules:\n"
+        "- Do NOT add citations at the end of every sentence or bullet.\n"
+        "- Provide exactly ONE citation line at the very end under a heading 'Reference:'.\n"
+        f"- That single citation must be exactly: {PAPER_CITATION}\n"
+        "- Do NOT write phrases like 'title not provided in the supplied excerpts'.\n"
+        "- Do NOT mention missing metadata; if a title is unknown, just omit it.\n"
+        "\n"
+        "Grounding rules:\n"
+        "- Only include statements grounded in the provided sources.\n"
+        "- Avoid speculation.\n"
     )
 
 
@@ -544,5 +553,6 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
 
