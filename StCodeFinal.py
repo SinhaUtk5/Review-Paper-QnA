@@ -347,7 +347,23 @@ st.markdown(
 
 # Authors section
 c1, c2 = st.columns(2)
+
+
 with c1:
+    img2 = load_square_image("utkarsh.jpg") or load_square_image(
+        "https://upload.wikimedia.org/wikipedia/commons/8/88/Placeholder_avatar.png"
+    )
+    if img2:
+        st.image(img2, caption="Utkarsh Sinha", width=150)
+    st.markdown(
+        """
+        **Utkarsh Sinha**<br>
+        Volunteer Research Associate <br>
+        Interaction of Phase-Behavior and Flow (IPB&F) Consortium<br>
+        """,
+        unsafe_allow_html=True,
+    )
+with c2:
     img1 = load_square_image("birol.jpg") or load_square_image(
         "https://upload.wikimedia.org/wikipedia/commons/8/88/Placeholder_avatar.png"
     )
@@ -359,21 +375,6 @@ with c1:
         Professor<br>
         Harold Vance Department of Petroleum Engineering,<br>
         Texas A&M University
-        """,
-        unsafe_allow_html=True,
-    )
-
-with c2:
-    img2 = load_square_image("utkarsh.jpg") or load_square_image(
-        "https://upload.wikimedia.org/wikipedia/commons/8/88/Placeholder_avatar.png"
-    )
-    if img2:
-        st.image(img2, caption="Utkarsh Sinha", width=150)
-    st.markdown(
-        """
-        **Utkarsh Sinha**<br>
-        Volunteer Research Associate <br>
-        Interaction of Phase-Behavior and Flow (IPB&F) Consortium<br>
         """,
         unsafe_allow_html=True,
     )
@@ -566,6 +567,7 @@ if go:
     except Exception as e:
         st.error("Something went wrong while running the Q&A. See details below.")
         show_exception(e)
+
 
 
 
