@@ -53,11 +53,15 @@ st.set_page_config(
 )
 
 # --- Top logos ---------------------------------------------------------------------
-left_space, logo1 = st.columns([4, 1,])
+left_space, logo1, logo2, right_space = st.columns([4, 1, 1, 4])
 
 with logo1:
     if os.path.exists("TAMU.png"):
-        st.image("TAMU.png", width=300)
+        st.image("TAMU.png", width=180)
+
+with logo2:
+    if os.path.exists("IPBF.png"):
+        st.image("IPBF.png", width=180)
 
 
 
